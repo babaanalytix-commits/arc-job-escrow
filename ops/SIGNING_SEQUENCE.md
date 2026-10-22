@@ -19,7 +19,7 @@ Steps 2–5 are done in the live app (`babacapital.app/arc/job-escrow/`) — the
 to move "through your contract and app". The commands below are the fallback for the same calls.
 Set `R=https://rpc.mainnet.arc.io` and `E=<escrow address from Step 1>`.
 
-| # | Signer | Action | Expected state after (verify before the next step) |
+| # | Signer | Action | Expected state after (check before the next step) |
 |---|---|---|---|
 | 1 | builder | Deploy | Code at E (4,841 bytes, masked runtime sha256 `6b0a12e1…dac5` = FREEZE_v2.json); `usdc()` = USDC; `identityRegistry()` = registry above; `REVIEW_WINDOW()` = 259200; builder nonce 12 → 13; builder USDC −~0.024 (gas). |
 | 2 | client | USDC `approve(E, 1500000)` (nonce 0) | `allowance(client, E)` = 1500000; client nonce 0 → 1; client USDC −~0.0012 (gas). |
@@ -54,7 +54,7 @@ in Step 4. Publish `ops/job1_out/report.json` + `report.md` unchanged before sig
 re-derived later with `--base-block`; Robinhood's public RPC keeps state only ~10 minutes, so that leg is
 checkable on it only right after the run.
 
-Verification reads (no signing):
+Reads to check (no signing):
 
 ```bash
 arc-cast code $E --rpc-url $R | wc -c

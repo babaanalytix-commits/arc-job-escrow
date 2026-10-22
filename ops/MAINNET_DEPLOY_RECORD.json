@@ -13,10 +13,10 @@
   "creation_bytecode_sha256": "3806138c85d2988e6a31e19e825b1d2e08e56281262959a11bb76ccfec4e6dfb",
   "runtime_masked_sha256": "6b0a12e1aa79ddc6fc96111a1c596f2ff709584430bdf571fedcb79f7074dac5",
   "runtime_bytes": 4841,
-  "matches_FREEZE_v2": true,
   "usdc": "0x3600000000000000000000000000000000000000",
   "identityRegistry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
   "REVIEW_WINDOW": 259200,
-  "verified_by": "CC3, reads from rpc.mainnet.arc.io",
-  "verified_at_prague": "2026-10-22 22:11 CEST"
+  "matches_FREEZE_v2": true,
+  "checked_by": "CC3, reads from rpc.mainnet.arc.io",
+  "checked_at_prague": "2026-10-22 22:11 CEST"
 }
