@@ -1,0 +1,18 @@
+Small fix turn. Stay on Arc TESTNET. Do NOT change anything under contracts/, foundry.toml or remappings.txt, and do not deploy anything.
+
+BUG (verified in a browser against a local fork): with the RPC unreachable, Refresh shows "No jobs yet" instead of the error state. Cause: viem's publicClient.multicall with allowFailure: true does NOT throw when the whole RPC request fails. It returns every call as { status: 'failure', error }. useAllJobs skips failures with `continue`, so the catch block never runs.
+
+Fix in src/hooks/useJobEscrow.ts, useAllJobs:
+1. If ANY result in a batch has status 'failure', throw that result's error, so the existing catch sets the error state. getJob never reverts for an id that does not exist (it returns an empty struct with client = 0x0), so a failed getJob always means a real read error.
+2. Delete the comment "Individual call failed (e.g. job does not exist) — treat as end of range". It is wrong.
+3. Reword the two comments that contain the word "selector(s)" so the word no longer appears in src/. Meaning unchanged.
+Change nothing else.
+
+Then run, and report the full output of each:
+  a. npx vite build --base /arc/job-escrow/ --outDir dist-testnet --emptyOutDir
+  b. grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist-testnet | awk -F: '{s+=$2} END {print s+0}'
+     grep -rc "bcc39efc" dist-testnet src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "from ['\"]wagmi/chains['\"]|useEnsName|useEnsAvatar|getEnsName|normalize\(" src | wc -l
+     grep -rnE "1d78082c|selector|aggregate3" src | wc -l
+  c. find dist-testnet -type f | sort | xargs sha256sum
+Report the files you changed.

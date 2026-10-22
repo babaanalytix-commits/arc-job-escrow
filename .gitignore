@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-*/
+contracts/out/
+contracts/cache/
+cache/
+out/
+.env
+.env.*
+ops/.logscan/
+ops/job1_out/*.tmp
+.DS_Store

@@ -1,0 +1,29 @@
+Fix turn. Stay on Arc TESTNET. Do NOT change anything under contracts/ and do not deploy anything.
+
+BUG (verified on chain): src/hooks/useJobEscrow.ts hand-encodes getJob calldata with selector 0x1d78082c. The real selector of getJob(uint256) is 0xbf22c457 (cast sig "getJob(uint256)"). Calling the testnet escrow with 0x1d78082c reverts. Because aggregate3 uses allowFailure, every call fails silently and the list always shows "No jobs yet". On a local fork holding two real jobs, this build shows "No jobs yet".
+
+Changes:
+1. In useAllJobs, delete encodeGetJob, decodeGetJob, the hand-written MULTICALL3 ABI and the selector literal. Use viem's
+   publicClient.multicall({ contracts: ids.map(id => ({ address: escrow, abi: JOB_ESCROW_ABI, functionName: 'getJob', args: [id] })), allowFailure: true, multicallAddress: '0xcA11bde05977b3631167028862bE2a173976CA11' })
+   in batches of 20. Read the decoded struct fields by name (client, agentId, amount, deadline, specHash, status, resultHash, payee, submittedAt).
+   Job ids are sequential from 1, so stop at the first id whose client is the zero address.
+2. If a multicall request itself fails (RPC error), or any getJob in a batch fails, show a visible error state ("Could not load jobs from the chain" with a Retry button) and log the error. Never show "No jobs yet" after a failed read.
+3. No hand-written selectors or ABI encoding anywhere in src/. Always encode from JOB_ESCROW_ABI or the viem/wagmi ABI helpers.
+4. Restore the Foundry build configuration exactly as it was before the last turn. The contract's frozen creation bytecode depends on it, because solc writes the remappings into the metadata hash.
+   - remappings.txt: remove the line "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/".
+   - foundry.toml: remove the 4 lines added last turn (the 3 comment lines and exclude = ["contracts/imported/**"]).
+   - Delete lib/openzeppelin-contracts-upgradeable/ and its .gitmodules entry if one was added.
+   contracts/imported/ was deleted last turn; leave it deleted.
+
+Then run, and report the full output of each:
+  a. cat remappings.txt foundry.toml
+  b. forge test (from the workspace root). It must report 77 passed, with zero changes to contracts/.
+  c. npx vite build --base /arc/job-escrow/ --outDir dist-testnet --emptyOutDir
+  d. Acceptance checks. For the first, print the count AND every matching line, cut to 200 characters:
+     grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist-testnet | awk -F: '{s+=$2} END {print s+0}'
+     grep -rhoiE ".{80}walletconnect.{80}" dist-testnet | cut -c1-200
+     grep -rc "bcc39efc" dist-testnet src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "from ['\"]wagmi/chains['\"]|useEnsName|useEnsAvatar|getEnsName|normalize\(" src | wc -l
+     grep -rnE "1d78082c|selector|aggregate3" src | wc -l
+  e. find dist-testnet -type f | sort | xargs sha256sum
+Report the files you changed.

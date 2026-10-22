@@ -1,0 +1,31 @@
+App-only hardening turn. Stay on Arc TESTNET (chainId 5042002) for this turn. Do NOT change anything under contracts/ (JobEscrow.sol and its tests are frozen at v2; do not redeploy, do not deploy anything).
+
+Facts (read from chain, use exactly):
+- Arc testnet chainId 5042002, RPC https://rpc.testnet.arc.io, explorer https://explorer.testnet.arc.io.
+- JobEscrow testnet v2: 0x5e43e923fe88709f37f4ea3143922181e38b8584 (already in src/contracts/jobEscrow.ts).
+- Multicall3 is deployed on Arc testnet at 0xcA11bde05977b3631167028862bE2a173976CA11.
+- rpc.testnet.arc.io and rpc.mainnet.arc.io reject eth_getLogs ranges of 10,000 blocks or more ("requested range too large"). The current job list asks for 50,000 blocks, so it always fails and shows "No jobs yet".
+
+Changes:
+1. Remove ConnectKit entirely: ConnectKitProvider in src/main.tsx, ConnectKitButton in src/App.tsx, and the "connectkit" dependency in package.json. connectkit@1.9.2 statically imports walletConnect from '@wagmi/connectors' and 'wagmi/connectors', which ships @walletconnect/ethereum-provider, the Reown/w3m modal and the relay/verify/pulse endpoints even though our config only uses injected(). Replace it with a small Connect button built on wagmi hooks only (useAccount, useConnect, useDisconnect, useSwitchChain):
+   - one "Connect browser wallet" button using the injected connector;
+   - when connected: the address shortened and a Disconnect action;
+   - a clear message when no browser wallet is installed.
+   Import injected from '@wagmi/core' only. Do not import from 'wagmi/connectors', '@wagmi/connectors', or any WalletConnect, Reown, Coinbase or MetaMask SDK package. Keep the visual style of the current header button.
+2. src/config.ts: Arc testnet is the ONLY chain. Remove Ethereum mainnet and ENS resolution, so no request goes to any host other than rpc.testnet.arc.io. Keep injected() as the only connector.
+3. useAllJobs: stop scanning logs. Read getJob(1), getJob(2), … through Multicall3, in batches of 20, until a job's client is the zero address. Show createTxHash only for transactions made in this browser session; otherwise link the job to the escrow's address page on the explorer.
+4. Studio preview instrumentation: load './tracing' and './console-capture' ONLY when the app runs inside the Studio iframe (window.self !== window.top). Use dynamic import(), so a top-level visit loads and executes neither and posts nothing to any parent. registerChain() in config.ts must likewise run only inside the iframe.
+5. src/App.tsx hard-codes the contract link to 0xbcc39efc316dc03666be1ada7428a9bc5c12f073. That is the OLD v1 contract, the one with the removed cancelSubmission. Derive the link from the configured escrow address in src/contracts/jobEscrow.ts and the configured chain's explorer, never from a literal.
+6. No secrets, keys, analytics or third-party scripts. Keep the "Built with Arc Studio" watermark.
+Do not change the network, the escrow address or vite.config.ts base. Those change in a later turn.
+
+Then run, and report the full output of each:
+  a. forge test (from the workspace root, as in earlier turns). It must pass with zero changes to contracts/.
+  b. npx vite build --base /arc/job-escrow/ --outDir dist-testnet --emptyOutDir
+  c. These three acceptance checks. Each must print 0:
+     grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist-testnet | awk -F: '{s+=$2} END {print s+0}'
+     grep -rc "bcc39efc" dist-testnet src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "from ['\"]wagmi/chains['\"]|useEnsName|useEnsAvatar|getEnsName|normalize\(" src | wc -l
+  d. find dist-testnet -type f | sort | xargs sha256sum
+  e. ls -l on every file under dist-testnet larger than 900000 bytes.
+Report the files you changed.

@@ -1,0 +1,22 @@
+{
+  "chain_id": 5042,
+  "escrow": "0x9795C1E25d27976Ef5A888bc05ff224eCf9034da",
+  "deploy_tx": "0xee9348b159691ba8a0d2fb23991956637562d9195ccef95387f30320baff3864",
+  "block": 27337887,
+  "from": "0xcCf8f9e4c7Ce491f379a3Fe26718b036AC752De8",
+  "builder_nonce_before": 12,
+  "builder_nonce_after": 13,
+  "gas_used": 1100094,
+  "effective_gas_price_wei": 21674438637,
+  "builder_usdc_before": "1.457744",
+  "builder_usdc_after": "1.433901",
+  "creation_bytecode_sha256": "3806138c85d2988e6a31e19e825b1d2e08e56281262959a11bb76ccfec4e6dfb",
+  "runtime_masked_sha256": "6b0a12e1aa79ddc6fc96111a1c596f2ff709584430bdf571fedcb79f7074dac5",
+  "runtime_bytes": 4841,
+  "matches_FREEZE_v2": true,
+  "usdc": "0x3600000000000000000000000000000000000000",
+  "identityRegistry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+  "REVIEW_WINDOW": 259200,
+  "verified_by": "CC3, reads from rpc.mainnet.arc.io",
+  "verified_at_prague": "2026-10-22 22:11 CEST"
+}

@@ -1,0 +1,31 @@
+Mainnet switch turn. Do NOT change anything under contracts/, foundry.toml or remappings.txt (the contract is frozen at v2 and is already deployed; do not redeploy, do not deploy anything). Change only what is listed here.
+
+Facts (read from chain, use exactly):
+- Arc mainnet: chainId 5042, RPC https://rpc.mainnet.arc.io, explorer https://explorer.arc.io, native currency USDC with 18 decimals (gas token). ERC-20 USDC 0x3600000000000000000000000000000000000000, 6 decimals.
+- JobEscrow mainnet address: 0x9795C1E25d27976Ef5A888bc05ff224eCf9034da (deployed in block 27337887).
+- IdentityRegistry mainnet: 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432.
+- Multicall3 on Arc mainnet: 0xcA11bde05977b3631167028862bE2a173976CA11.
+
+Changes:
+1. src/config.ts: define the Arc mainnet chain with viem defineChain, using the facts above, with HTTP RPC only (no webSocket URLs) and contracts.multicall3. It is the ONLY chain in the wagmi config. Transport http('https://rpc.mainnet.arc.io'). Keep injected() from '@wagmi/core' as the only connector. registerChain stays behind the Studio-iframe guard.
+2. src/contracts/jobEscrow.ts: set JOB_ESCROW_MAINNET_ADDRESS to the address above and add JOB_ESCROW_MAINNET_DEPLOY_BLOCK = 27337887n as a documented constant. Nothing reads logs. Keep the testnet address only as a documented constant.
+3. Replace every remaining use of ARC_TESTNET_CHAIN_ID / JOB_ESCROW_TESTNET_ADDRESS / IDENTITY_REGISTRY_TESTNET in hooks and components with ARC_CHAIN_ID = 5042, the mainnet escrow address and IDENTITY_REGISTRY_MAINNET. The network label reads "Arc". The wrong-network banner switches the wallet to 5042, using wallet_addEthereumChain with the facts above if the wallet does not know the chain.
+4. vite.config.ts: base: '/arc/job-escrow/'.
+5. AGENTS.md (docs only):
+   - Add a "v2 (current) | Arc (5042) | 0x9795C1E25d27976Ef5A888bc05ff224eCf9034da" row with its explorer link. Keep both testnet rows, with the testnet v2 row marked "testnet".
+   - Tech stack: wagmi v2 + viem v2 with an injected (browser-extension) connector only; no ConnectKit and no WalletConnect.
+   - Job list: read through Multicall3 getJob(1..n), not event-sourced. Fix the JobList and useJobEscrow descriptions to match.
+   - Mainnet constructor args: USDC 0x3600000000000000000000000000000000000000, IdentityRegistry 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432.
+Nothing else: the wallet button, the Multicall listing, the error state, the iframe-only tracer and the derived contract link stay as they are.
+
+Then run, and report the full output of each:
+  a. forge test (from the workspace root). It must report 77 passed, with zero changes to contracts/.
+  b. npx vite build --outDir dist --emptyOutDir
+  c. Acceptance checks. Print each count, and for the first also every matching line cut to 200 characters:
+     grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist | awk -F: '{s+=$2} END {print s+0}'
+     grep -rhoiE ".{80}walletconnect.{80}" dist | cut -c1-200
+     grep -rc "bcc39efc" dist src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "rpc\.testnet\.arc\.io|5042002" src | grep -vE "src/onchain-facts\.ts|src/contracts/jobEscrow\.ts" | wc -l
+     grep -rc "__ESCROW__" src | awk -F: '{s+=$2} END {print s+0}'
+  d. find dist -type f | sort | xargs sha256sum
+Report the files you changed.

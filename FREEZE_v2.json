@@ -1,0 +1,31 @@
+{
+ "frozen_at": "2026-10-18T11:57:26Z",
+ "decision": "CoS 2026-10-18: v2 frozen as the mainnet candidate; no line-trimming turn",
+ "studio_project": "https://studio.arc.io/app/ef8a622f-a25e-45d2-8cfb-d30b60004784",
+ "testnet_address": "0x5e43e923fe88709f37f4ea3143922181e38b8584",
+ "source_sha256": "6b04211503e4dcc738bd0a56a7fa804a17196b6838af6cdffedc6472724fae64",
+ "source_lines": 210,
+ "compiler": {
+  "solc": "0.8.28",
+  "optimizer_runs": 200,
+  "evm_version": "paris"
+ },
+ "runtime_masked_sha256": "6b0a12e1aa79ddc6fc96111a1c596f2ff709584430bdf571fedcb79f7074dac5",
+ "runtime_bytes": 4841,
+ "immutable_offsets": {
+  "62": [
+   427,
+   835,
+   1311,
+   1851,
+   2586
+  ],
+  "65": [
+   179,
+   1634,
+   3296,
+   3814
+  ]
+ },
+ "creation_bytecode_sha256": "3806138c85d2988e6a31e19e825b1d2e08e56281262959a11bb76ccfec4e6dfb"
+}
