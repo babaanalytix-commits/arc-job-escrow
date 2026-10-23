@@ -34,6 +34,9 @@ from pathlib import Path
 import eth_abi
 from eth_utils import function_signature_to_4byte_selector, keccak, to_checksum_address
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from clmath import amounts_for_liquidity  # noqa: E402
+
 SAFE = "0x87DFf32Ca31066DA9BC210B55585a521355D580F"
 LENS = "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
 TRANSFER = "0x" + keccak(text="Transfer(address,address,uint256)").hex()
@@ -202,6 +205,93 @@ def scan_received_nfts(rpc, cfg, H, a=None, found=None, calls=0):
     return sorted(found), calls, H
 
 
+def _words(raw):
+    b = bytes.fromhex(raw[2:])
+    return [int.from_bytes(b[i:i + 32], "big") for i in range(0, len(b), 32)]
+
+
+def _int24(w):
+    w &= (1 << 24) - 1
+    return w - (1 << 24) if w >= 1 << 23 else w
+
+
+def direct_position(rpc, npm, tid, H, lens_reason):
+    """For an NFT PoolLens v1 returns NO_DATA on: decide ownership, and if the Safe holds or has staked it,
+    read the position directly. Returns (entry or None, not_held record or None)."""
+    def cite(to, call):
+        return {"to": to_checksum_address(to), "call": call, "block": H}
+    try:
+        (owner,), ocite = read(rpc, npm, "ownerOf(uint256)", ["uint256"], [tid], ["address"], H)
+    except Reverted:
+        return None, {"lens_reason": lens_reason + "; ownerOf reverts (burned)"}
+    owner = to_checksum_address(owner)
+    held, extra = None, {}
+    if owner.lower() == SAFE.lower():
+        held = "direct"
+    else:
+        try:
+            (yes,), scite = read(rpc, owner, "stakedContains(address,uint256)", ["address", "uint256"],
+                                 [SAFE, tid], ["bool"], H)
+        except Exception:
+            yes = False
+        if yes:
+            held, extra = "staked", {"staked_contains_read": scite}
+    if held is None:
+        return None, {"lens_reason": "%s; owner is %s, not the Safe or its stake" % (lens_reason, owner),
+                      "owner_read": ocite}
+    pw = _words(rpc.call(npm, enc("positions(uint256)", ["uint256"], [tid]), H))
+    if len(pw) != 12:
+        raise RuntimeError("positions(%d) on %s returned %d words" % (tid, npm, len(pw)))
+    t0, t1 = to_checksum_address("0x%040x" % pw[2]), to_checksum_address("0x%040x" % pw[3])
+    tl, tu, liq = _int24(pw[5]), _int24(pw[6]), pw[7]
+    if held == "staked":
+        (pool,), pcite = read(rpc, owner, "pool()", [], [], ["address"], H)
+    else:
+        (fac,), _ = read(rpc, npm, "factory()", [], [], ["address"], H)
+        (pool,), pcite = read(rpc, fac, "getPool(address,address,int24)", ["address", "address", "int24"],
+                              [t0, t1, _int24(pw[4])], ["address"], H)
+    sw = _words(rpc.call(pool, enc("slot0()", [], []), H))
+    sqrt_p, tick = sw[0], _int24(sw[1])
+    (fee,), _ = read(rpc, pool, "fee()", [], [], ["uint24"], H)
+    (ts,), _ = read(rpc, pool, "tickSpacing()", [], [], ["int24"], H)
+    dec = []
+    for t in (t0, t1):
+        (d,), _ = read(rpc, t, "decimals()", [], [], ["uint8"], H)
+        dec.append(d)
+    a0, a1 = amounts_for_liquidity(sqrt_p, tick, tl, tu, liq)
+    entry = {
+        "held": held, **extra,
+        "read_via": "direct",
+        "lens_status": "NO_DATA", "lens_reason": lens_reason,
+        "npm": to_checksum_address(npm), "token_id": tid, "kind": "UNREAD_BY_LENS",
+        "pool": to_checksum_address(pool),
+        "token0": {"address": t0, "symbol": symbol(rpc, t0, H)[0], "decimals": dec[0]},
+        "token1": {"address": t1, "symbol": symbol(rpc, t1, H)[0], "decimals": dec[1]},
+        "fee": fee, "tick_spacing": ts, "tick_lower": tl, "tick_upper": tu, "current_tick": tick,
+        "sqrt_price_x96": str(sqrt_p), "in_range": tl <= tick < tu, "liquidity": str(liq),
+        "staked": held == "staked",
+        "uncollected_fees_wei": None,
+        "uncollected_fees_note": "not read: PoolLens v1 returns NO_DATA (%s) for this position manager" % lens_reason,
+        "principal_if_withdrawn_wei": {"token0": str(a0), "token1": str(a1)},
+        "principal_source": "computed by ops/clmath.py (Uniswap v3 TickMath/SqrtPriceMath, rounded down) from "
+                            "the positions() and slot0() reads; not a PoolLens read",
+        "owner": owner,
+        "position_read": cite(npm, "positions(%d)" % tid), "owner_read": ocite,
+        "pool_read": cite(pool, "slot0()"), "pool_from_read": pcite,
+    }
+    if held == "staked":
+        entry["gauge"] = owner
+        try:
+            (earned,), ecite = read(rpc, owner, "earned(address,uint256)", ["address", "uint256"],
+                                    [SAFE, tid], ["uint256"], H)
+            entry["gauge_rewards_earned_wei"] = str(earned)
+            entry["gauge_rewards_read"] = ecite
+        except Reverted:
+            entry["gauge_rewards_earned_wei"] = None
+            entry["gauge_rewards_note"] = "not read: earned(address,uint256) reverts on this gauge"
+    return entry, None
+
+
 def chain_report(key, cfg, forced_block):
     rpcs = [Rpc(u) for u in cfg["rpcs"]]
     primary = rpcs[0]
@@ -245,8 +335,18 @@ def chain_report(key, cfg, forced_block):
     for npm, tid in received:
         p, pcite = lens_position(primary, npm, tid, H)
         if p["status"] != "OK":
-            not_held.append({"contract": npm, "token_id": tid, "lens_status": p["status"],
-                             "lens_reason": p["reason"], "read": pcite})
+            if p["reason"] in ("positions", "npm_no_code"):
+                not_held.append({"contract": npm, "token_id": tid, "lens_status": p["status"],
+                                 "lens_reason": p["reason"] + " (not a concentrated-liquidity position NFT)",
+                                 "read": pcite})
+                continue
+            entry, nh = direct_position(primary, npm, tid, H, p["reason"])
+            if entry is None:
+                nh.update({"contract": npm, "token_id": tid, "lens_status": p["status"], "read": pcite})
+                not_held.append(nh)
+            else:
+                entry["lens_read"] = pcite
+                positions.append(entry)
             continue
         entry = None
         if p["owner"].lower() == SAFE.lower():
@@ -304,8 +404,9 @@ def chain_report(key, cfg, forced_block):
     # Safe a position must report balanceOf(Safe) == the number found held directly, and every gauge
     # holding one of the Safe's positions must list exactly the ids found staked (stakedValues).
     completeness = []
-    npms = sorted({e["npm"] for e in positions} | {n["contract"] for n in not_held
-                                                     if n["lens_status"] == "OK" or n["lens_reason"] == "ownerOf"})
+    npms = sorted({e["npm"] for e in positions} | {
+        n["contract"] for n in not_held
+        if not n["lens_reason"].startswith(("positions", "npm_no_code"))})  # every position manager seen
     for npm in npms:
         (bal,), bcite = read(primary, npm, "balanceOf(address)", ["address"], [SAFE], ["uint256"], H)
         direct = sum(1 for e in positions if e["npm"] == npm and e["held"] == "direct")
@@ -323,6 +424,12 @@ def chain_report(key, cfg, forced_block):
     for r in rpcs[1:]:
         same = True
         for e in positions:
+            if e.get("read_via") == "direct":
+                pw = _words(r.call(e["npm"], enc("positions(uint256)", ["uint256"], [e["token_id"]]), H))
+                sw = _words(r.call(e["pool"], enc("slot0()", [], []), H))
+                if (str(pw[7]), str(sw[0]), _int24(sw[1])) != (e["liquidity"], e["sqrt_price_x96"], e["current_tick"]):
+                    same = False
+                continue
             p2, _ = lens_position(r, e["npm"], e["token_id"], H)
             if (str(p2["fees0"]), str(p2["fees1"]), p2["tick"], str(p2["liquidity"])) != (
                     e["uncollected_fees_wei"]["token0"], e["uncollected_fees_wei"]["token1"],
@@ -460,21 +567,36 @@ def to_md(rep):
             for e in c["positions"]:
                 t0, t1 = e["token0"], e["token1"]
                 pr, fe = e["principal_if_withdrawn_wei"], e["uncollected_fees_wei"]
-                vp, vf = pos_usd(e, pr["token0"], pr["token1"], px), pos_usd(e, fe["token0"], fe["token1"], px)
+                vp = pos_usd(e, pr["token0"], pr["token1"], px)
+                vf = pos_usd(e, fe["token0"], fe["token1"], px) if fe else None
                 tot_p += vp or 0
                 tot_f += vf or 0
-                L.append("| #%d | %s/%s | %s | %s | %s %s + %s %s | %s %s + %s %s | %s | %s |" % (
-                    e["token_id"], t0["symbol"], t1["symbol"], "yes" if e["in_range"] else "no",
+                mark = " †" if e.get("read_via") == "direct" else ""
+                fees_txt = ("%s %s + %s %s" % (human(fe["token0"], t0["decimals"]), t0["symbol"],
+                                               human(fe["token1"], t1["decimals"]), t1["symbol"]) if fe else "not read")
+                L.append("| #%d%s | %s/%s | %s | %s | %s %s + %s %s | %s | %s | %s |" % (
+                    e["token_id"], mark, t0["symbol"], t1["symbol"], "yes" if e["in_range"] else "no",
                     "yes" if e["staked"] else "no",
                     human(pr["token0"], t0["decimals"]), t0["symbol"], human(pr["token1"], t1["decimals"]), t1["symbol"],
-                    human(fe["token0"], t0["decimals"]), t0["symbol"], human(fe["token1"], t1["decimals"]), t1["symbol"],
-                    usd(vp), usd(vf)))
-            L += ["| **Total** | | | | | | **%s** | **%s** |" % (usd(tot_p), usd(tot_f)), "",
+                    fees_txt, usd(vp), usd(vf) if fe else "n/a"))
+            nd = sum(1 for e in c["positions"] if not e["uncollected_fees_wei"])
+            L += ["| **Total** | | | | | | **%s** | **%s**%s |" % (
+                      usd(tot_p), usd(tot_f), " (excludes the %d † position%s; fees not read)" % (nd, "s" * (nd > 1))
+                      if nd else ""), "",
                   "USD figures are estimates for the reader, not reads: each position's amounts are converted at its "
                   "own pool's price at the pinned block (`sqrt_price_x96` in report.json), then to USD with: " +
                   "; ".join("%s %s (%s)" % (sym, usd(v[0]).replace("≈ ", "≈ ") if v[0] >= 1 else "≈ $%s" % v[0].quantize(Decimal("0.0001")), v[1])
-                            for sym, v in sorted(px.items())) + ". Not used for anything on chain.", "",
-                  "### Reads (raw, as in report.json)", ""]
+                            for sym, v in sorted(px.items())) + ". Not used for anything on chain.", ""]
+            direct = [e for e in c["positions"] if e.get("read_via") == "direct"]
+            if direct:
+                L += ["† Read directly, not through PoolLens: PoolLens v1 returns NO_DATA (%s) for this position "
+                      "manager (`%s…`, %s). Ticks and liquidity come from `positions()`, price and current tick from "
+                      "the pool's `slot0()`, both at the pinned block. Principal is computed from those reads with "
+                      "Uniswap v3 math (`ops/clmath.py`, checked against PoolLens to the wei on every readable "
+                      "position). Uncollected fees were not read for these positions." % (
+                          direct[0]["lens_reason"], direct[0]["npm"][:10],
+                          ", ".join("#%d" % e["token_id"] for e in direct)), ""]
+            L += ["### Reads (raw, as in report.json)", ""]
             L += ["| NPM / id | Pool | Fee / spacing | Range | Tick | In range | Liquidity | Uncollected fees (wei) | Staked |",
                   "|---|---|---|---|---|---|---|---|---|"]
             for e in c["positions"]:
@@ -482,21 +604,24 @@ def to_md(rep):
                 L.append("| `%s…` #%d | %s `%s…` | %d / %d | %d … %d | %d | %s | %s | %s %s / %s %s | %s |" % (
                     e["npm"][:8], e["token_id"], pair, e["pool"][:8], e["fee"], e["tick_spacing"],
                     e["tick_lower"], e["tick_upper"], e["current_tick"], "yes" if e["in_range"] else "no",
-                    e["liquidity"], e["uncollected_fees_wei"]["token0"], e["token0"]["symbol"],
-                    e["uncollected_fees_wei"]["token1"], e["token1"]["symbol"],
+                    e["liquidity"],
+                    *((e["uncollected_fees_wei"]["token0"], e["token0"]["symbol"],
+                       e["uncollected_fees_wei"]["token1"], e["token1"]["symbol"]) if e["uncollected_fees_wei"]
+                      else ("not read", "", "", "")),
                     "yes" if e["staked"] else "no"))
             L.append("")
             staked = [e for e in c["positions"] if e["staked"]]
             if staked:
+                def _rw(e):
+                    if e.get("gauge_rewards_earned_wei") is None:
+                        return "#%d %s" % (e["token_id"], e.get("gauge_rewards_note", "not read"))
+                    sym = (e.get("gauge_reward_token") or {}).get("symbol")
+                    return "#%d %s %s (%s wei)%s" % (
+                        e["token_id"], human(e["gauge_rewards_earned_wei"], 18), sym, e["gauge_rewards_earned_wei"],
+                        "" if sym in px else ", no USD estimate: no pool for this token among the Safe's positions")
                 L += ["Staked positions: swap fees on staked liquidity are paid to the gauge, not to the NFT, "
                       "so the uncollected fees PoolLens reports for them are what `collect` would return. "
-                      "Gauge rewards earned: " +
-                      "; ".join("#%d %s %s (%s wei)%s" % (
-                          e["token_id"], human(e.get("gauge_rewards_earned_wei"), 18),
-                          (e.get("gauge_reward_token") or {}).get("symbol"), e.get("gauge_rewards_earned_wei"),
-                          "" if (e.get("gauge_reward_token") or {}).get("symbol") in px
-                          else ", no USD estimate: no pool for this token among the Safe's positions")
-                                for e in staked) + ".", ""]
+                      "Gauge rewards earned: " + "; ".join(_rw(e) for e in staked) + ".", ""]
             empty = [e for e in c["positions"] if e["liquidity"] == "0"]
             if empty:
                 L += ["Held with zero liquidity: " + ", ".join("#%d" % e["token_id"] for e in empty) + ".", ""]
