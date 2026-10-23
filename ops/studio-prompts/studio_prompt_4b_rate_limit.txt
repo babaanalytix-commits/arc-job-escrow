@@ -1,0 +1,19 @@
+Follow-up fix turn. Stay on Arc MAINNET. Do NOT change anything under contracts/, foundry.toml or remappings.txt, and do not deploy anything. Change only what is listed.
+
+Measured (by CC5, against rpc.mainnet.arc.io with the app's exact requests): bursts of 30 concurrent requests from one client get HTTP 429 (4 of 60). Right after a transaction the app sends a burst: wallet polling, waitForTransactionReceipt, the list refresh and the cards' ownerOf reads. viem's http transport defaults (3 retries, about 1 s in total) can run out inside a 429 window.
+
+1. src/config.ts: transport http('https://rpc.mainnet.arc.io', { retryCount: 5, retryDelay: 400 }).
+2. src/hooks/useJobEscrow.ts, fetchBatchWithRetry: 4 attempts in total, waiting 0.5 s, 1.5 s and 3.5 s, so the app-level retry outlasts the transport's own. Keep the rule that any 'failure' result makes the attempt fail.
+3. useAllJobs: job ids are sequential from 1, so stop as soon as a batch contains an empty slot (client == 0x0), without requesting the next batch. With 1 job, a load must send exactly ONE aggregate3 call. Request a further batch only if all 20 slots in the current batch were filled.
+4. Soft refresh failure (a list is already shown): keep the list and the soft notice, and automatically retry once after 5 s. On success, clear the notice. If the automatic retry also fails, keep the notice and the Retry button. No red error while a list is shown.
+Nothing else changes.
+
+Then run, and report the full output of each:
+  a. forge test (from the workspace root). It must report 77 passed, with zero changes to contracts/.
+  b. npx vite build --outDir dist --emptyOutDir
+  c. grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist | awk -F: '{s+=$2} END {print s+0}'
+     grep -rc "bcc39efc" dist src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "rpc\.testnet\.arc\.io|5042002" src | grep -vE "src/onchain-facts\.ts|src/contracts/jobEscrow\.ts" | wc -l
+     grep -rhoE "wss://[a-zA-Z0-9./-]+" dist | sort -u | wc -l
+  d. find dist -type f | sort | xargs sha256sum
+Report the files you changed.

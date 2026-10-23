@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { ExternalLink, Loader2, CheckCircle, RotateCcw, Send, Unlock, Edit2 } from 'lucide-react'
+import { ExternalLink, Loader2, CheckCircle, RotateCcw, Send, Unlock, Edit2, Paperclip, X as XIcon, AlertTriangle } from 'lucide-react'
 import { JOB_ESCROW_ABI, JOB_ESCROW_MAINNET_ADDRESS, REVIEW_WINDOW_SECONDS } from '@/contracts/jobEscrow'
 import { buildTxExplorerUrl } from '@/onchain-facts'
-import { formatAddress, formatUSDC, deadlineToDisplay, hashText, parseOnchainError } from '@/utils/format'
+import { formatAddress, formatUSDC, deadlineToDisplay, hashText, hashBytes, parseOnchainError } from '@/utils/format'
 import { ARC_CHAIN_ID } from '@/hooks/useJobEscrow'
 import type { Job } from '@/hooks/useJobEscrow'
 
@@ -24,6 +24,8 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
 export function JobCard({ job, agentOwner, onRefresh }: Props) {
   const { address } = useAccount()
   const [resultText, setResultText] = useState('')
+  const [resultFile, setResultFile] = useState<{ name: string; hash: `0x${string}` } | null>(null)
+  const resultFileRef = useRef<HTMLInputElement>(null)
   const [newPayeeText, setNewPayeeText] = useState('')
   const [error, setError] = useState('')
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
@@ -145,28 +147,86 @@ export function JobCard({ job, agentOwner, onRefresh }: Props) {
         {/* Submit result — agent owner, Open, before deadline */}
         {isAgentOwner && job.status === 'Open' && !deadlinePassed && (
           <div className="space-y-2">
+            <label className="block text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--muted)' }}>
+              Result (text). The app stores keccak256 of exactly what you type.
+            </label>
             <textarea
-              placeholder="Describe your result (will be hashed)…"
+              placeholder="Describe your result…"
               value={resultText}
               onChange={(e) => setResultText(e.target.value)}
+              disabled={resultFile !== null}
               rows={2}
-              className="w-full resize-none rounded-xl px-3 py-2 text-xs outline-none glass-inner"
+              className="w-full resize-none rounded-xl px-3 py-2 text-xs outline-none disabled:opacity-40 glass-inner"
               style={{ color: 'var(--ink)' }}
             />
-            {resultText.trim() && (
-              <p className="mono text-xs truncate" style={{ color: 'var(--subtle)' }}>
-                keccak256: {hashText(resultText).slice(0, 22)}…
+
+            {/* Double-hash warning */}
+            {!resultFile && /^0x[0-9a-fA-F]{64}$/.test(resultText.trim()) && (
+              <div className="flex items-start gap-1.5 rounded-xl px-3 py-2 text-xs" style={{ background: 'rgba(180,100,0,0.08)', color: 'var(--status-submitted)' }}>
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                <span>This looks like a hash. It will be hashed again. To submit a file&apos;s hash, choose the file instead.</span>
+              </div>
+            )}
+
+            {/* File picker */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => resultFileRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors"
+                style={{ background: 'var(--surface-muted)', color: 'var(--muted)' }}
+              >
+                <Paperclip className="size-3" />
+                Hash a file instead
+              </button>
+              {resultFile && (
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg px-2 py-1 text-xs" style={{ background: 'var(--surface-muted)' }}>
+                  <span className="mono min-w-0 flex-1 truncate" style={{ color: 'var(--ink-2)' }}>{resultFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setResultFile(null); if (resultFileRef.current) resultFileRef.current.value = '' }}
+                    style={{ color: 'var(--muted)' }}
+                  >
+                    <XIcon className="size-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+            <input
+              ref={resultFileRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                const reader = new FileReader()
+                reader.onload = (ev) => {
+                  const buf = ev.target?.result
+                  if (buf instanceof ArrayBuffer) {
+                    setResultFile({ name: file.name, hash: hashBytes(new Uint8Array(buf)) })
+                  }
+                }
+                reader.readAsArrayBuffer(file)
+              }}
+            />
+
+            {/* Always-visible resultHash preview */}
+            {(resultFile || resultText.trim()) && (
+              <p className="mono break-all text-xs" style={{ color: 'var(--subtle)' }}>
+                resultHash: {resultFile ? resultFile.hash : hashText(resultText)}
               </p>
             )}
+
             <ActionButton
               label="Submit Result"
               icon={<Send className="size-3.5" />}
-              disabled={!resultText.trim() || confirming || action === 'submit'}
+              disabled={(!resultText.trim() && !resultFile) || confirming || action === 'submit'}
               loading={action === 'submit' || confirming}
               color="var(--status-open)"
               onClick={() => {
                 setAction('submit')
-                void runAction('submitResult', [job.jobId, hashText(resultText)])
+                const rHash = resultFile ? resultFile.hash : hashText(resultText)
+                void runAction('submitResult', [job.jobId, rHash])
               }}
             />
           </div>

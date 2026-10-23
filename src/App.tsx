@@ -16,7 +16,7 @@ const ESCROW_SHORT = JOB_ESCROW_MAINNET_ADDRESS.slice(0, 6) + '…' + JOB_ESCROW
 export default function App() {
   const { isConnected } = useAccount()
   const [sheetOpen, setSheetOpen] = useState(false)
-  const { jobs, loading, error, refresh } = useAllJobs(ARC_CHAIN_ID)
+  const { jobs, loading, error, softError, refresh } = useAllJobs(ARC_CHAIN_ID)
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
@@ -123,7 +123,7 @@ export default function App() {
         </div>
 
         {/* Job list */}
-        <JobList jobs={jobs} loading={loading} error={error} onRefresh={refresh} />
+        <JobList jobs={jobs} loading={loading} error={error} softError={softError} onRefresh={refresh} />
       </main>
 
       <CreateJobSheet

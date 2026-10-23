@@ -1,0 +1,26 @@
+App-only fix turn. Stay on Arc MAINNET (chain 5042, escrow 0x9795C1E25d27976Ef5A888bc05ff224eCf9034da). Do NOT change anything under contracts/, foundry.toml or remappings.txt, and do not deploy anything. Change only what is listed.
+
+1. Job list resilience (src/hooks/useJobEscrow.ts, src/components/JobList.tsx):
+   a. Retry each multicall batch up to 3 attempts in total, waiting 1 s and then 2 s, before treating it as failed. A batch fails if the request throws or if any getJob result has status 'failure' (keep the existing rule that a failed getJob is a real read error).
+   b. If a refresh still fails after the retries and a list was loaded successfully before, keep showing that last good list. Show a small non-blocking notice above it: "Could not refresh from the chain. Showing the list loaded at HH:MM:SS." with a Retry button. Do not replace the list with the error state.
+   c. Show the full error state ("Could not load jobs from the chain." + Retry) only when no list has ever loaded successfully in this session.
+   d. Never show "No jobs yet" after a failed read.
+2. Spec field (src/components/CreateJobSheet.tsx). The app stores keccak256 of what is typed into "Job specification". In job 1 a file hash was pasted there, so the stored specHash is keccak256 of that hash.
+   a. Label the field: "Job specification (text). The app stores keccak256 of exactly what you type."
+   b. Add a "Hash a file instead" option: a file input that reads the file's bytes and uses keccak256(file bytes) as the specHash, showing the file name and the resulting hash. When a file is chosen, the text box is disabled. Clearing the file re-enables it.
+   c. If the text box contains exactly 0x followed by 64 hex characters, show an inline warning: "This looks like a hash. It will be hashed again: the stored specHash will be keccak256 of these 32 bytes. To use a file's hash as the specHash, choose the file instead."
+   d. Under the field, always show the exact bytes32 that will be sent as specHash.
+3. Deadline field (label only, same file): the datetime-local input takes local time. Label it "Deadline (your local time, UTC±hh:mm)", using the browser's offset, and under it show the same moment in UTC and the unix timestamp that will be sent. Do not change how the deadline is computed.
+Nothing else changes.
+
+Then run, and report the full output of each:
+  a. forge test (from the workspace root). It must report 77 passed, with zero changes to contracts/.
+  b. npx vite build --outDir dist --emptyOutDir
+  c. Acceptance checks. Print each count, and for the first also every matching line cut to 200 characters:
+     grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist | awk -F: '{s+=$2} END {print s+0}'
+     grep -rhoiE ".{80}walletconnect.{80}" dist | cut -c1-200
+     grep -rc "bcc39efc" dist src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "rpc\.testnet\.arc\.io|5042002" src | grep -vE "src/onchain-facts\.ts|src/contracts/jobEscrow\.ts" | wc -l
+     grep -rhoE "wss://[a-zA-Z0-9.\-/]+" dist | sort -u | wc -l
+  d. find dist -type f | sort | xargs sha256sum
+Report the files you changed.

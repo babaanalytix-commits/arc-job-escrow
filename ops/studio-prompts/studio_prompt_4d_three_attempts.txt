@@ -1,0 +1,14 @@
+One-line fix turn. Stay on Arc MAINNET. Do NOT change anything under contracts/, foundry.toml, remappings.txt or src/config.ts, and do not deploy anything.
+
+src/hooks/useJobEscrow.ts: change the app-level retry from 4 attempts (delays 0.5 s / 1.5 s / 3.5 s) to 3 attempts (delays 0.5 s / 1.5 s), i.e. RETRY_DELAYS = [500, 1500]. Measured with a mocked 429 at the RPC's real latency (340 ms per request), 4 attempts × viem's 4 transport tries took 15 s to show feedback. Target: under 10 s. Change nothing else.
+
+Then run, and report the full output of each:
+  a. forge test (from the workspace root). It must report 77 passed, with zero changes to contracts/.
+  b. npx vite build --outDir dist --emptyOutDir
+  c. grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist | awk -F: '{s+=$2} END {print s+0}'
+     grep -rc "bcc39efc" dist src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "rpc\.testnet\.arc\.io|5042002" src | grep -vE "src/onchain-facts\.ts|src/contracts/jobEscrow\.ts" | wc -l
+     grep -rhoE "wss://[a-zA-Z0-9./-]+" dist | sort -u | wc -l
+     grep -n "RETRY_DELAYS" src/hooks/useJobEscrow.ts
+  d. find dist -type f | sort | xargs sha256sum
+Report the files you changed.

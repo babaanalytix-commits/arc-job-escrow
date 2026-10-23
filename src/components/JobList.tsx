@@ -1,5 +1,5 @@
 import { useReadContract } from 'wagmi'
-import { RefreshCw, Loader2, Inbox, AlertTriangle } from 'lucide-react'
+import { RefreshCw, Loader2, Inbox, AlertTriangle, WifiOff } from 'lucide-react'
 import { JobCard } from './JobCard'
 import type { Job } from '@/hooks/useJobEscrow'
 import { ARC_CHAIN_ID } from '@/hooks/useJobEscrow'
@@ -19,10 +19,12 @@ interface Props {
   jobs: Job[]
   loading: boolean
   error: string | null
+  /** Soft error: set to the time string (HH:MM:SS) when a refresh fails but a prior list is available. */
+  softError: string | null
   onRefresh: () => void
 }
 
-export function JobList({ jobs, loading, error, onRefresh }: Props) {
+export function JobList({ jobs, loading, error, softError, onRefresh }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -40,7 +42,7 @@ export function JobList({ jobs, loading, error, onRefresh }: Props) {
         </button>
       </div>
 
-      {/* RPC error state — shown instead of "No jobs yet" when a chain read fails */}
+      {/* Hard error state — shown only when no list has ever loaded */}
       {error && !loading && (
         <div
           className="flex items-start gap-3 rounded-2xl px-4 py-3 text-sm"
@@ -55,6 +57,27 @@ export function JobList({ jobs, loading, error, onRefresh }: Props) {
             onClick={onRefresh}
             className="shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold text-white"
             style={{ background: 'var(--danger)' }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Soft error notice — shown above a stale list when a refresh fails.
+          Hidden while an auto-retry is in flight (loading=true and jobs are present). */}
+      {softError && !(loading && jobs.length > 0) && !error && (
+        <div
+          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs"
+          style={{ background: 'rgba(186,43,76,0.05)', border: '1px solid rgba(186,43,76,0.15)', color: 'var(--muted)' }}
+        >
+          <WifiOff className="size-3.5 shrink-0" style={{ color: 'var(--danger)' }} />
+          <span className="flex-1">
+            Could not refresh from the chain. Showing the list loaded at {softError}.
+          </span>
+          <button
+            onClick={onRefresh}
+            className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold"
+            style={{ background: 'var(--surface-muted)', color: 'var(--ink)' }}
           >
             Retry
           </button>

@@ -1,4 +1,4 @@
-import { keccak256, toBytes } from 'viem'
+import { keccak256, toBytes, toHex } from 'viem'
 import { buildTxExplorerUrl } from '@/onchain-facts'
 
 export function formatAddress(addr: string): string {
@@ -15,6 +15,11 @@ export function formatUSDC(raw: bigint): string {
 
 export function hashText(text: string): `0x${string}` {
   return keccak256(toBytes(text))
+}
+
+/** keccak256 of raw file bytes. Pass a Uint8Array read from a FileReader. */
+export function hashBytes(bytes: Uint8Array): `0x${string}` {
+  return keccak256(toHex(bytes))
 }
 
 export function deadlineFromDate(dt: string): bigint {

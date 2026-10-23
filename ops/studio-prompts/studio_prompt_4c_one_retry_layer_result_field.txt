@@ -1,0 +1,24 @@
+Small fix turn. Stay on Arc MAINNET. Do NOT change anything under contracts/, foundry.toml or remappings.txt, and do not deploy anything. Change only what is listed.
+
+1. One retry layer only (measured by CC5 with a mocked 429: the two layers multiply, so a sustained 429 took ~55 s before any feedback):
+   src/config.ts: go back to viem's default transport retries: http('https://rpc.mainnet.arc.io') with no retryCount/retryDelay options.
+   Keep useJobEscrow's app-level retry (4 attempts at 0.5 s / 1.5 s / 3.5 s), stop-at-first-empty-slot, the soft notice and the single 5 s auto-retry exactly as they are.
+   Target: under a sustained 429, the soft notice (list already shown) or the red error (first load) appears within about 10 s.
+2. Result field in src/components/JobCard.tsx ("Submit Result", agent owner). Today it stores hashText(what is typed), so pasting a 0x hash stores keccak256 of that hash. Give it the same treatment as the spec field in CreateJobSheet:
+   a. Label: "Result (text). The app stores keccak256 of exactly what you type."
+   b. A "Hash a file instead" file input: keccak256(file bytes) becomes the resultHash, with the file name and resulting hash shown. While a file is chosen, the text box is disabled.
+   c. If the text is exactly 0x followed by 64 hex characters, show the warning: "This looks like a hash. It will be hashed again. To submit a file's hash, choose the file instead."
+   d. Always show the exact bytes32 that will be sent as resultHash before the button.
+   Reuse hashBytes from src/utils/format.ts.
+Nothing else changes.
+
+Then run, and report the full output of each:
+  a. forge test (from the workspace root). It must report 77 passed, with zero changes to contracts/.
+  b. npx vite build --outDir dist --emptyOutDir
+  c. grep -rciE "walletconnect|reown|w3m-|web3modal|pulse\.walletconnect|relay\.walletconnect|verify\.walletconnect|connectkit" dist | awk -F: '{s+=$2} END {print s+0}'
+     grep -rc "bcc39efc" dist src | awk -F: '{s+=$2} END {print s+0}'
+     grep -rlE "rpc\.testnet\.arc\.io|5042002" src | grep -vE "src/onchain-facts\.ts|src/contracts/jobEscrow\.ts" | wc -l
+     grep -rhoE "wss://[a-zA-Z0-9./-]+" dist | sort -u | wc -l
+     grep -n "retryCount\|retryDelay" src/config.ts | wc -l
+  d. find dist -type f | sort | xargs sha256sum
+Report the files you changed.
