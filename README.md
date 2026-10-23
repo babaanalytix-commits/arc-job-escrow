@@ -112,11 +112,16 @@ We checked each Studio turn outside Studio. That found three problems, all fixed
 
 ## The app
 
-Known UX issues, for the next Studio turn:
-- The spec field hashes its contents, and its label does not say so. Pasting a file hash there produces keccak256
-  of the hash, as happened in job 1. Planned fix: label the field, or accept a file and hash its bytes directly.
-- The deadline field takes local time and does not show a time zone. Planned fix: show the time zone, or take UTC.
-- The job card's result box hashes its input in the same way. Planned fix: the same as the spec field.
+UX issues found in job 1, and their status in the live app (deployed 2026-10-23):
+- **Fixed:** the spec field and the job card's result field both hashed whatever was typed, without saying so. Both
+  are now labelled. Both can hash a chosen file directly: choosing `report.json` gives exactly the resultHash
+  above. Both warn when a `0x…` hash is pasted, and show the exact bytes32 that will be sent.
+- **Fixed:** the deadline input took local time without saying so. It now shows the browser's UTC offset, plus the
+  same moment in UTC and the unix timestamp that will be sent.
+- **Fixed:** the job list now retries each read (3 attempts, 0.5 s and 1.5 s apart) and stops at the first empty job
+  id. If a refresh fails it keeps the last loaded list with a notice and retries once automatically, and it never
+  shows "No jobs yet" after a failed read.
+- **Still open:** the job card displays the deadline in the viewer's local time without a time-zone label.
 
 React + Vite + wagmi/viem. It connects to browser-extension wallets only (no WalletConnect) and talks to one RPC,
 `https://rpc.mainnet.arc.io`, over HTTPS. Jobs are listed by reading `getJob(1..n)` through Multicall3, not by
