@@ -538,6 +538,18 @@ def to_md(rep):
     L = ["# LP health report — Safe %s" % rep["safe"], "",
          "Job 1 on the Agent Job Escrow (Arc mainnet). Facts and the reads they came from; no recommendations.",
          "Every number below is in report.json with the contract, function and block it was read at.", ""]
+    j = rep.get("job")
+    if j and "create_tx" in j:
+        L += ["## The job", "",
+              "Job %d on the Agent Job Escrow `%s` (Arc mainnet, chain %d), created in tx `%s` (block %d): client "
+              "`%s`, ERC-8004 agent %d, %s USDC, deadline %d (%s UTC)." % (
+                  j["job_id"], j["escrow"], j["escrow_chain_id"], j["create_tx"], j["create_block"], j["client"],
+                  j["agent_id"], human(j["amount_usdc_raw"], 6), j["deadline"],
+                  time.strftime("%Y-%m-%d %H:%M", time.gmtime(j["deadline"]))), "",
+              "Spec: `%s`, keccak256 of its exact bytes = `%s`. The on-chain specHash is `%s` = keccak256 of that "
+              "32-byte value. The app hashes the contents of its spec field, and the field held the file's hash, "
+              "so the spec is hashed twice. job1_report.py checks this derivation exactly and fails on any other value." % (
+                  j["spec_file"], j["spec_file_keccak256"], j["spec_hash_onchain"]), ""]
     for key in ("base", "robinhood"):
         if key not in rep["chains"]:
             continue
@@ -640,6 +652,47 @@ def to_md(rep):
     return "\n".join(L)
 
 
+ARC_RPC = "https://rpc.mainnet.arc.io"
+ESCROW = "0x9795C1E25d27976Ef5A888bc05ff224eCf9034da"
+JOB_ID = 1
+CREATE_TX = "0x4db11e45967a55cc5d729eb54029253d92e91a9ff0b50b36d457499b017fcd66"
+SPEC_FILE = Path(__file__).resolve().parent / "job1_spec.md"
+JOB_T = "(address,uint256,uint256,uint64,bytes32,uint8,bytes32,address,uint64)"
+
+
+def job_binding():
+    """Bind the report to job 1 on Arc mainnet, read at the createJob block. The app hashes the contents of its
+    spec field, and the spec field held keccak256(job1_spec.md) as a bytes32, so the on-chain specHash must be
+    exactly keccak256(bytes32 keccak256(exact bytes of job1_spec.md)). Any other value fails the check."""
+    rpc = Rpc(ARC_RPC)
+    rcpt = rpc.req("eth_getTransactionReceipt", [CREATE_TX])
+    blk = int(rcpt["blockNumber"], 16)
+    (j,), jcite = read(rpc, ESCROW, "getJob(uint256)", ["uint256"], [JOB_ID], [JOB_T], blk)
+    client, agent, amount, deadline, spec_onchain, status = j[0], j[1], j[2], j[3], j[4], j[5]
+    file_hash = keccak(SPEC_FILE.read_bytes())
+    expected = keccak(file_hash)  # keccak256 of the 32-byte value, not of its hex text
+    checks = [
+        {"check": "createJob tx status == 1 and sent to the escrow",
+         "pass": rcpt["status"] == "0x1" and (rcpt["to"] or "").lower() == ESCROW.lower()},
+        {"check": "on-chain specHash == keccak256(bytes32 keccak256(job1_spec.md))",
+         "expected": "0x" + expected.hex(), "read_value": "0x" + spec_onchain.hex(),
+         "pass": spec_onchain == expected},
+        {"check": "agentId == 135", "read_value": agent, "pass": agent == 135},
+    ]
+    return {
+        "escrow_chain_id": 5042, "escrow": ESCROW, "job_id": JOB_ID, "create_tx": CREATE_TX, "create_block": blk,
+        "client": to_checksum_address(client), "agent_id": agent, "amount_usdc_raw": amount,
+        "deadline": deadline, "status_at_create_block": status,
+        "spec_file": "ops/job1_spec.md",
+        "spec_file_keccak256": "0x" + file_hash.hex(),
+        "spec_hash_onchain": "0x" + spec_onchain.hex(),
+        "spec_hash_derivation": "spec_hash_onchain = keccak256(spec_file_keccak256 as 32 bytes). The app hashes "
+                                "the contents of its spec field, and that field held spec_file_keccak256.",
+        "get_job_read": jcite,
+        "checks": checks,
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-block", type=int)
@@ -656,8 +709,7 @@ def main():
             a.render_md, keccak(Path(a.render_md).read_bytes()).hex()))
         return 0
     rep = {
-        "job": {"escrow_chain_id": 5042, "job_id": 1, "agent_id": 135,
-                "spec_keccak256": "0xdbb92f517ea052ad744bf2ea46f7f49f6940e9c9334a4fa190b691849305eb57"},
+        "job": job_binding(),
         "safe": SAFE,
         "lens": LENS,
         "chains": {k: chain_report(k, CHAINS[k], {"base": a.base_block, "robinhood": a.rh_block}[k])
@@ -672,6 +724,10 @@ def main():
     h = "0x" + keccak(data).hex()
     print("report.json %d bytes  keccak256 %s" % (len(data), h))
     bad = 0
+    for x in rep["job"]["checks"]:
+        if not x["pass"]:
+            bad += 1
+            print("JOB CHECK FAILED: %s %s" % (x["check"], {k: v for k, v in x.items() if k != "check"}))
     for k, c in rep["chains"].items():
         print("%-9s block %d  positions held %d  received-not-held %d" % (
             k, c["block"], c["positions_held"], len(c["nfts_received_not_held"])))

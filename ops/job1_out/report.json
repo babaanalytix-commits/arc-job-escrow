@@ -1,0 +1,857 @@
+{
+  "chains": {
+    "base": {
+      "block": 52973234,
+      "block_hash": "0x46a784cf7ef95388cab55fa12038de2d3cb57eab0660753d2a88c36a7e28777a",
+      "block_timestamp": 1792735815,
+      "chain_id": 8453,
+      "completeness_checks": [
+        {
+          "check": "NPM balanceOf(Safe) == positions found held directly",
+          "expected": 0,
+          "pass": true,
+          "read": {
+            "block": 52973234,
+            "call": "balanceOf(0x87DFf32Ca31066DA9BC210B55585a521355D580F)",
+            "to": "0x4857DB576eE0e45F10525eC59527BfD10beeC60b"
+          },
+          "read_value": 0
+        },
+        {
+          "check": "NPM balanceOf(Safe) == positions found held directly",
+          "expected": 4,
+          "pass": true,
+          "read": {
+            "block": 52973234,
+            "call": "balanceOf(0x87DFf32Ca31066DA9BC210B55585a521355D580F)",
+            "to": "0x827922686190790b37229fd06084350E74485b72"
+          },
+          "read_value": 4
+        },
+        {
+          "check": "NPM balanceOf(Safe) == positions found held directly",
+          "expected": 4,
+          "pass": true,
+          "read": {
+            "block": 52973234,
+            "call": "balanceOf(0x87DFf32Ca31066DA9BC210B55585a521355D580F)",
+            "to": "0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53"
+          },
+          "read_value": 4
+        },
+        {
+          "check": "gauge stakedValues(Safe) == positions found staked there",
+          "expected": [
+            8623
+          ],
+          "pass": true,
+          "read": {
+            "block": 52973234,
+            "call": "stakedValues(0x87DFf32Ca31066DA9BC210B55585a521355D580F)",
+            "to": "0x74a30B3357121a822aDB91A539F4B11b5fb7cb3F"
+          },
+          "read_value": [
+            8623
+          ]
+        },
+        {
+          "check": "gauge stakedValues(Safe) == positions found staked there",
+          "expected": [
+            8622
+          ],
+          "pass": true,
+          "read": {
+            "block": 52973234,
+            "call": "stakedValues(0x87DFf32Ca31066DA9BC210B55585a521355D580F)",
+            "to": "0xAbb3fb6659e05847631896cB87A6D1b8bc0c6D8C"
+          },
+          "read_value": [
+            8622
+          ]
+        }
+      ],
+      "cross_checked_on": [
+        {
+          "positions_identical": true,
+          "rpc": "https://mainnet.base.org"
+        }
+      ],
+      "discovery": {
+        "from_block": 51545084,
+        "log_rpc": "https://base.gateway.tenderly.co",
+        "method": "eth_getLogs Transfer(address,address,uint256) with topic2 = Safe and 4 topics (ERC-721)",
+        "nfts_ever_received": 10,
+        "to_block": 52973234
+      },
+      "lens": {
+        "address": "0xADebbd5825B033bCD4B84FB019AbFC673406d902",
+        "code_bytes": 14125,
+        "runtime_keccak256": "0x445b4d78c7f37dd34810d5c4a23b1081e931cc39d0399a3cd3215b16a94c85ba"
+      },
+      "name": "Base",
+      "nfts_received_not_held": [],
+      "positions": [
+        {
+          "current_tick": -265546,
+          "fee": 85,
+          "gauge": "0xAbb3fb6659e05847631896cB87A6D1b8bc0c6D8C",
+          "gauge_rewards_earned_wei": null,
+          "gauge_rewards_note": "not read: earned(address,uint256) reverts on this gauge",
+          "held": "staked",
+          "in_range": true,
+          "kind": "UNREAD_BY_LENS",
+          "lens_read": {
+            "block": 52973234,
+            "call": "position(0x4857DB576eE0e45F10525eC59527BfD10beeC60b,8622)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "lens_reason": "pool_shape",
+          "lens_status": "NO_DATA",
+          "liquidity": "4247372172355",
+          "npm": "0x4857DB576eE0e45F10525eC59527BfD10beeC60b",
+          "owner": "0xAbb3fb6659e05847631896cB87A6D1b8bc0c6D8C",
+          "owner_read": {
+            "block": 52973234,
+            "call": "ownerOf(8622)",
+            "to": "0x4857DB576eE0e45F10525eC59527BfD10beeC60b"
+          },
+          "pool": "0xeC3c3755b9DED4a2960ef50C9b48C1694CE274C2",
+          "pool_from_read": {
+            "block": 52973234,
+            "call": "pool()",
+            "to": "0xAbb3fb6659e05847631896cB87A6D1b8bc0c6D8C"
+          },
+          "pool_read": {
+            "block": 52973234,
+            "call": "slot0()",
+            "to": "0xeC3c3755b9DED4a2960ef50C9b48C1694CE274C2"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "positions(8622)",
+            "to": "0x4857DB576eE0e45F10525eC59527BfD10beeC60b"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "19885969122337016",
+            "token1": "43128"
+          },
+          "principal_source": "computed by ops/clmath.py (Uniswap v3 TickMath/SqrtPriceMath, rounded down) from the positions() and slot0() reads; not a PoolLens read",
+          "read_via": "direct",
+          "sqrt_price_x96": "135808780464732762013694",
+          "staked": true,
+          "staked_contains_read": {
+            "block": 52973234,
+            "call": "stakedContains(0x87DFf32Ca31066DA9BC210B55585a521355D580F,8622)",
+            "to": "0xAbb3fb6659e05847631896cB87A6D1b8bc0c6D8C"
+          },
+          "tick_lower": -265664,
+          "tick_spacing": 1,
+          "tick_upper": -265384,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 8622,
+          "uncollected_fees_note": "not read: PoolLens v1 returns NO_DATA (pool_shape) for this position manager",
+          "uncollected_fees_wei": null
+        },
+        {
+          "current_tick": -67068,
+          "fee": 190,
+          "gauge": "0x74a30B3357121a822aDB91A539F4B11b5fb7cb3F",
+          "gauge_rewards_earned_wei": null,
+          "gauge_rewards_note": "not read: earned(address,uint256) reverts on this gauge",
+          "held": "staked",
+          "in_range": true,
+          "kind": "UNREAD_BY_LENS",
+          "lens_read": {
+            "block": 52973234,
+            "call": "position(0x4857DB576eE0e45F10525eC59527BfD10beeC60b,8623)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "lens_reason": "pool_shape",
+          "lens_status": "NO_DATA",
+          "liquidity": "80297516",
+          "npm": "0x4857DB576eE0e45F10525eC59527BfD10beeC60b",
+          "owner": "0x74a30B3357121a822aDB91A539F4B11b5fb7cb3F",
+          "owner_read": {
+            "block": 52973234,
+            "call": "ownerOf(8623)",
+            "to": "0x4857DB576eE0e45F10525eC59527BfD10beeC60b"
+          },
+          "pool": "0x42609aA1E58C5dD7E5a012DC74118fFf975F0Eac",
+          "pool_from_read": {
+            "block": 52973234,
+            "call": "pool()",
+            "to": "0x74a30B3357121a822aDB91A539F4B11b5fb7cb3F"
+          },
+          "pool_read": {
+            "block": 52973234,
+            "call": "slot0()",
+            "to": "0x42609aA1E58C5dD7E5a012DC74118fFf975F0Eac"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "positions(8623)",
+            "to": "0x4857DB576eE0e45F10525eC59527BfD10beeC60b"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "97420485",
+            "token1": "220145"
+          },
+          "principal_source": "computed by ops/clmath.py (Uniswap v3 TickMath/SqrtPriceMath, rounded down) from the positions() and slot0() reads; not a PoolLens read",
+          "read_via": "direct",
+          "sqrt_price_x96": "2770812458337634838968578632",
+          "staked": true,
+          "staked_contains_read": {
+            "block": 52973234,
+            "call": "stakedContains(0x87DFf32Ca31066DA9BC210B55585a521355D580F,8623)",
+            "to": "0x74a30B3357121a822aDB91A539F4B11b5fb7cb3F"
+          },
+          "tick_lower": -68700,
+          "tick_spacing": 50,
+          "tick_upper": -66200,
+          "token0": {
+            "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "decimals": 6,
+            "symbol": "USDC"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 8623,
+          "uncollected_fees_note": "not read: PoolLens v1 returns NO_DATA (pool_shape) for this position manager",
+          "uncollected_fees_wei": null
+        },
+        {
+          "current_tick": -265539,
+          "fee": 2500,
+          "held": "direct",
+          "in_range": true,
+          "kind": "SLIPSTREAM",
+          "liquidity": "1",
+          "npm": "0x827922686190790b37229fd06084350E74485b72",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0x827922686190790b37229fd06084350E74485b72,75616840)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "40478",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "135852314936169638378298",
+          "staked": false,
+          "tick_lower": -265800,
+          "tick_spacing": 100,
+          "tick_upper": -264100,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 75616840,
+          "uncollected_fees_wei": {
+            "token0": "333",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -265539,
+          "fee": 2500,
+          "held": "direct",
+          "in_range": true,
+          "kind": "SLIPSTREAM",
+          "liquidity": "1",
+          "npm": "0x827922686190790b37229fd06084350E74485b72",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0x827922686190790b37229fd06084350E74485b72,76798832)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "40478",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "135852314936169638378298",
+          "staked": false,
+          "tick_lower": -265800,
+          "tick_spacing": 100,
+          "tick_upper": -264100,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 76798832,
+          "uncollected_fees_wei": {
+            "token0": "331",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -265539,
+          "fee": 2500,
+          "held": "direct",
+          "in_range": true,
+          "kind": "SLIPSTREAM",
+          "liquidity": "1",
+          "npm": "0x827922686190790b37229fd06084350E74485b72",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0x827922686190790b37229fd06084350E74485b72,76803517)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "56517",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "135852314936169638378298",
+          "staked": false,
+          "tick_lower": -265800,
+          "tick_spacing": 100,
+          "tick_upper": -263500,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 76803517,
+          "uncollected_fees_wei": {
+            "token0": "330",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -265539,
+          "fee": 2500,
+          "held": "direct",
+          "in_range": false,
+          "kind": "SLIPSTREAM",
+          "liquidity": "0",
+          "npm": "0x827922686190790b37229fd06084350E74485b72",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x70aCDF2Ad0bf2402C957154f944c19Ef4e1cbAE1)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0x827922686190790b37229fd06084350E74485b72,76808821)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "135852314936169638378298",
+          "staked": false,
+          "tick_lower": -265300,
+          "tick_spacing": 100,
+          "tick_upper": -263600,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 76808821,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -67067,
+          "fee": 190,
+          "held": "direct",
+          "in_range": true,
+          "kind": "SLIPSTREAM",
+          "liquidity": "0",
+          "npm": "0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x160D7E9d948B16c163332a277b393c288408eb12",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x160D7E9d948B16c163332a277b393c288408eb12)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53,6933532)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "2770842235319594645420498569",
+          "staked": false,
+          "tick_lower": -68700,
+          "tick_spacing": 50,
+          "tick_upper": -66200,
+          "token0": {
+            "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "decimals": 6,
+            "symbol": "USDC"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 6933532,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -265546,
+          "fee": 85,
+          "held": "direct",
+          "in_range": false,
+          "kind": "SLIPSTREAM",
+          "liquidity": "0",
+          "npm": "0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x7C7420DD105E2779316423Ba3E973f434315EFA9",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x7C7420DD105E2779316423Ba3E973f434315EFA9)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53,6933533)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "135809356724352338878905",
+          "staked": false,
+          "tick_lower": -265124,
+          "tick_spacing": 1,
+          "tick_upper": -264322,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 6933533,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -265546,
+          "fee": 85,
+          "held": "direct",
+          "in_range": false,
+          "kind": "SLIPSTREAM",
+          "liquidity": "0",
+          "npm": "0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x7C7420DD105E2779316423Ba3E973f434315EFA9",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x7C7420DD105E2779316423Ba3E973f434315EFA9)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53,7997423)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "135809356724352338878905",
+          "staked": false,
+          "tick_lower": -265319,
+          "tick_spacing": 1,
+          "tick_upper": -265179,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 7997423,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -265546,
+          "fee": 85,
+          "held": "direct",
+          "in_range": false,
+          "kind": "SLIPSTREAM",
+          "liquidity": "0",
+          "npm": "0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0x7C7420DD105E2779316423Ba3E973f434315EFA9",
+          "pool_read": {
+            "block": 52973234,
+            "call": "poolState(0x7C7420DD105E2779316423Ba3E973f434315EFA9)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 52973234,
+            "call": "position(0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53,8410363)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "135809356724352338878905",
+          "staked": false,
+          "tick_lower": -265444,
+          "tick_spacing": 1,
+          "tick_upper": -265304,
+          "token0": {
+            "address": "0x4200000000000000000000000000000000000006",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+            "decimals": 8,
+            "symbol": "cbBTC"
+          },
+          "token_id": 8410363,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        }
+      ],
+      "positions_held": 10,
+      "rpc": "https://base.drpc.org"
+    },
+    "robinhood": {
+      "block": 95724869,
+      "block_hash": "0x7d40c660522bd8106b011ac9fe36ded16b35a26b362323f3c5f61c3d43f5ffe9",
+      "block_timestamp": 1792735934,
+      "chain_id": 4663,
+      "completeness_checks": [
+        {
+          "check": "NPM balanceOf(Safe) == positions found held directly",
+          "expected": 4,
+          "pass": true,
+          "read": {
+            "block": 95724869,
+            "call": "balanceOf(0x87DFf32Ca31066DA9BC210B55585a521355D580F)",
+            "to": "0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3"
+          },
+          "read_value": 4
+        }
+      ],
+      "cross_checked_on": [],
+      "discovery": {
+        "from_block": 74604384,
+        "log_rpc": "https://rpc.mainnet.chain.robinhood.com",
+        "method": "eth_getLogs Transfer(address,address,uint256) with topic2 = Safe and 4 topics (ERC-721)",
+        "nfts_ever_received": 4,
+        "to_block": 95724869
+      },
+      "lens": {
+        "address": "0xADebbd5825B033bCD4B84FB019AbFC673406d902",
+        "code_bytes": 14125,
+        "runtime_keccak256": "0x445b4d78c7f37dd34810d5c4a23b1081e931cc39d0399a3cd3215b16a94c85ba"
+      },
+      "name": "Robinhood Chain",
+      "nfts_received_not_held": [],
+      "positions": [
+        {
+          "current_tick": -198502,
+          "fee": 3000,
+          "held": "direct",
+          "in_range": false,
+          "kind": "UNIV3",
+          "liquidity": "0",
+          "npm": "0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0xa9188730Fe85Be88ad499D7d52B099e800fB0334",
+          "pool_read": {
+            "block": 95724869,
+            "call": "poolState(0xa9188730Fe85Be88ad499D7d52B099e800fB0334)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 95724869,
+            "call": "position(0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3,1328145)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "3878715531602583512678400",
+          "staked": false,
+          "tick_lower": -198180,
+          "tick_spacing": 60,
+          "tick_upper": -196860,
+          "token0": {
+            "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+            "decimals": 6,
+            "symbol": "USDG"
+          },
+          "token_id": 1328145,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -198502,
+          "fee": 3000,
+          "held": "direct",
+          "in_range": false,
+          "kind": "UNIV3",
+          "liquidity": "0",
+          "npm": "0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0xa9188730Fe85Be88ad499D7d52B099e800fB0334",
+          "pool_read": {
+            "block": 95724869,
+            "call": "poolState(0xa9188730Fe85Be88ad499D7d52B099e800fB0334)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 95724869,
+            "call": "position(0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3,1458323)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "3878715531602583512678400",
+          "staked": false,
+          "tick_lower": -198360,
+          "tick_spacing": 60,
+          "tick_upper": -197040,
+          "token0": {
+            "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+            "decimals": 6,
+            "symbol": "USDG"
+          },
+          "token_id": 1458323,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -198502,
+          "fee": 3000,
+          "held": "direct",
+          "in_range": true,
+          "kind": "UNIV3",
+          "liquidity": "0",
+          "npm": "0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0xa9188730Fe85Be88ad499D7d52B099e800fB0334",
+          "pool_read": {
+            "block": 95724869,
+            "call": "poolState(0xa9188730Fe85Be88ad499D7d52B099e800fB0334)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 95724869,
+            "call": "position(0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3,1461606)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "0",
+            "token1": "0"
+          },
+          "sqrt_price_x96": "3878715531602583512678400",
+          "staked": false,
+          "tick_lower": -198540,
+          "tick_spacing": 60,
+          "tick_upper": -197220,
+          "token0": {
+            "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+            "decimals": 6,
+            "symbol": "USDG"
+          },
+          "token_id": 1461606,
+          "uncollected_fees_wei": {
+            "token0": "0",
+            "token1": "0"
+          }
+        },
+        {
+          "current_tick": -198502,
+          "fee": 3000,
+          "held": "direct",
+          "in_range": true,
+          "kind": "UNIV3",
+          "liquidity": "56226066133165",
+          "npm": "0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3",
+          "owner": "0x87DFf32Ca31066DA9BC210B55585a521355D580F",
+          "pool": "0xa9188730Fe85Be88ad499D7d52B099e800fB0334",
+          "pool_read": {
+            "block": 95724869,
+            "call": "poolState(0xa9188730Fe85Be88ad499D7d52B099e800fB0334)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "position_read": {
+            "block": 95724869,
+            "call": "position(0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3,1467408)",
+            "to": "0xADebbd5825B033bCD4B84FB019AbFC673406d902"
+          },
+          "principal_if_withdrawn_wei": {
+            "token0": "64800553682301420",
+            "token1": "21715541"
+          },
+          "sqrt_price_x96": "3878715531602583512678400",
+          "staked": false,
+          "tick_lower": -198660,
+          "tick_spacing": 60,
+          "tick_upper": -197340,
+          "token0": {
+            "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          "token1": {
+            "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+            "decimals": 6,
+            "symbol": "USDG"
+          },
+          "token_id": 1467408,
+          "uncollected_fees_wei": {
+            "token0": "291979405739472",
+            "token1": "751966"
+          }
+        }
+      ],
+      "positions_held": 4,
+      "rpc": "https://rpc.mainnet.chain.robinhood.com"
+    }
+  },
+  "job": {
+    "agent_id": 135,
+    "amount_usdc_raw": 1500000,
+    "checks": [
+      {
+        "check": "createJob tx status == 1 and sent to the escrow",
+        "pass": true
+      },
+      {
+        "check": "on-chain specHash == keccak256(bytes32 keccak256(job1_spec.md))",
+        "expected": "0xb40f01b872fd873a553861cfb9fafe13e9124a6f57e71390902e021bd1948f28",
+        "pass": true,
+        "read_value": "0xb40f01b872fd873a553861cfb9fafe13e9124a6f57e71390902e021bd1948f28"
+      },
+      {
+        "check": "agentId == 135",
+        "pass": true,
+        "read_value": 135
+      }
+    ],
+    "client": "0x1F418E40c558188FF911D24CEAEE0Fc86F83AD3A",
+    "create_block": 27408632,
+    "create_tx": "0x4db11e45967a55cc5d729eb54029253d92e91a9ff0b50b36d457499b017fcd66",
+    "deadline": 1793358000,
+    "escrow": "0x9795C1E25d27976Ef5A888bc05ff224eCf9034da",
+    "escrow_chain_id": 5042,
+    "get_job_read": {
+      "block": 27408632,
+      "call": "getJob(1)",
+      "to": "0x9795C1E25d27976Ef5A888bc05ff224eCf9034da"
+    },
+    "job_id": 1,
+    "spec_file": "ops/job1_spec.md",
+    "spec_file_keccak256": "0xdbb92f517ea052ad744bf2ea46f7f49f6940e9c9334a4fa190b691849305eb57",
+    "spec_hash_derivation": "spec_hash_onchain = keccak256(spec_file_keccak256 as 32 bytes). The app hashes the contents of its spec field, and that field held spec_file_keccak256.",
+    "spec_hash_onchain": "0xb40f01b872fd873a553861cfb9fafe13e9124a6f57e71390902e021bd1948f28",
+    "status_at_create_block": 0
+  },
+  "lens": "0xADebbd5825B033bCD4B84FB019AbFC673406d902",
+  "safe": "0x87DFf32Ca31066DA9BC210B55585a521355D580F"
+}
