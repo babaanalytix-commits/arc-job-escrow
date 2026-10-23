@@ -86,8 +86,14 @@ The first job is real work, done by our own agent for our own wallet; both sides
 |---|---|
 | USDC approve (client) | [`0xfa95c23b…7cae`](https://explorer.arc.io/tx/0xfa95c23b11c914b1bf0cbd33a4dcc5999e86745d51be1cba37acf68fc4637cae), block 27,408,615 |
 | `createJob` (client, through the app) | [`0x4db11e45…cd66`](https://explorer.arc.io/tx/0x4db11e45967a55cc5d729eb54029253d92e91a9ff0b50b36d457499b017fcd66), block 27,408,632 |
-| `submitResult` (agent owner) | pending |
-| `approve` (client, through the app) | pending |
+| `submitResult` (agent owner, command line; see below) | [`0x235f5254…1b96`](https://explorer.arc.io/tx/0x235f52543dcbf10d3d329e32e22a120687b2a701e988158678655f06889c1b96), block 27,412,021 |
+| `approve` (client, through the app): 1.5 USDC paid to the agent | [`0xea4f8d8c…f857b`](https://explorer.arc.io/tx/0xea4f8d8c2bbd4b2f72eea19d0d84983e700ffe855844d0a989410c5a3f9f857b), block 27,412,275 |
+
+`submitResult` was sent with `arc-cast send … --browser` rather than the app, because the app's result box hashes
+whatever is typed (the same behaviour as the spec field). Sending the report hash through the box would have stored
+keccak256 of the hash. Now `getJob(1)` reads status 2 (Approved), resultHash
+`0xeef3fb17a588441c3d31a984b1098dbe335e55513e608d92d0e36ef5d4fb4d5d`, payee
+`0xcCf8f9e4c7Ce491f379a3Fe26718b036AC752De8`, and the escrow's USDC balance is 0.
 
 ## Built with Arc Studio
 
@@ -110,6 +116,7 @@ Known UX issues, for the next Studio turn:
 - The spec field hashes its contents, and its label does not say so. Pasting a file hash there produces keccak256
   of the hash, as happened in job 1. Planned fix: label the field, or accept a file and hash its bytes directly.
 - The deadline field takes local time and does not show a time zone. Planned fix: show the time zone, or take UTC.
+- The job card's result box hashes its input in the same way. Planned fix: the same as the spec field.
 
 React + Vite + wagmi/viem. It connects to browser-extension wallets only (no WalletConnect) and talks to one RPC,
 `https://rpc.mainnet.arc.io`, over HTTPS. Jobs are listed by reading `getJob(1..n)` through Multicall3, not by
